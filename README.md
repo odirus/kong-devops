@@ -11,6 +11,11 @@ docker-compose up -d
 1. 80 端口，对应 kong 的 8000 端口
 2. 1337 端口，konga 管理界面，已经配置好默认节点信息（账号：admin，密码：kongaadmin）
 
+当某个插件修改代码之后，需要重启 kong 才行，执行以下命令即可
+```
+docker-compose restart kong
+```
+
 ## 插件示例
 ## maintenance
 维护页面插件，当某个项目需要显示维护界面时，在对应的 service 下启用该插件即可，如果需要全部项目都进入维护状态，通过全局方式启用该插件即可
