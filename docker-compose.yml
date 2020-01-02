@@ -1,0 +1,74 @@
+version: "3"
+
+networks:
+  kong-devops-net:
+    driver: bridge
+
+services:
+  #######################################
+  # Postgres: The database used by Kong
+  #######################################
+  postgres:
+    image: postgres:10.0
+    restart: always
+    environment:
+      POSTGRES_USER: kong
+      POSTGRES_DB: kong
+    networks:
+      - kong-devops-net
+    volumes:
+      - ./init-db:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+
+  #######################################
+  # Kong: The API Gateway
+  #######################################
+  kong:
+    image: kong:1.4.2
+    restart: always
+    networks:
+      - kong-devops-net
+    volumes:
+      - ./kong_components/kong-plugins:/kong_components/kong/plugins
+      - ./logs/kong:/usr/local/kong/logs
+    command: ["sh", "-c", "cp /kong_components/kong/plugins/init-script.sh /init-script.sh && chmod +x /init-script.sh && ./init-script.sh"]
+    ports:
+      - "80:8000"
+      - "8001:8001"
+    depends_on:
+      - postgres
+    environment:
+      KONG_LOG_LEVEL: ${KONG_LOG_LEVEL}
+      KONG_PLUGINS: ${KONG_PLUGINS}
+      KONG_DATABASE: ${KONG_DATABASE}
+      KONG_PG_HOST: ${KONG_PG_HOST}
+      KONG_PG_PORT: ${KONG_PG_PORT}
+      KONG_PG_TIMEOUT: ${KONG_PG_TIMEOUT}
+      KONG_PG_USER: ${KONG_PG_USER}
+      KONG_PG_PASSWORD: ${KONG_PG_PASSWORD}
+      KONG_PG_DATABASE: ${KONG_PG_DATABASE}
+      KONG_ADMIN_LISTEN: ${KONG_ADMIN_LISTEN}
+      KONG_LUA_PACKAGE_PATH: ${KONG_LUA_PACKAGE_PATH}
+
+  #######################################
+  # Konga GUI
+  #######################################
+  konga:
+    image: pantsel/konga:0.14.7
+    networks:
+      - kong-devops-net
+    ports:
+      - "1337:1337"
+    depends_on:
+      - kong
+      - postgres
+    environment:
+      DB_ADAPTER: ${KONGA_DB_ADAPTER}
+      DB_HOST: ${KONGA_DB_HOST}
+      DB_PORT: ${KONGA_DB_PORT}
+      DB_USER: ${KONGA_DB_USER}
+      DB_PASSWORD: ${KONGA_DB_PASSWORD}
+      DB_DATABASE: ${KONGA_DB_DATABASE}
+      NODE_ENV: ${KONGA_NODE_ENV}
+      TOKEN_SECRET: ${KONGA_TOKEN_SECRET}
