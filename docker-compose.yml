@@ -30,6 +30,7 @@ services:
     networks:
       - kong-devops-net
     volumes:
+      - ./kong_config:/etc/kong
       - ./kong_components/kong-plugins:/kong_components/kong/plugins
       - ./logs/kong:/usr/local/kong/logs
     command: ["sh", "-c", "cp /kong_components/kong/plugins/init-script.sh /init-script.sh && chmod +x /init-script.sh && ./init-script.sh"]
